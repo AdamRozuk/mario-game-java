@@ -51,6 +51,36 @@ class SegmentBlockV extends Segment {
 				sprite.stopJump();
 	}
 }
+class SegmentBlockF extends Segment {
+	private int[] anim;	
+        
+	public SegmentBlockF(int x, int y, String file, int[] sequence) {
+		super(x,y,file);
+		anim = sequence; 
+	}
+        public int frame = 0;
+	public void tick()	{
+		frame++;
+		while (frame >= anim.length)
+			frame -= anim.length;
+	}
+		
+	public void draw(Graphics g)	{
+		g.drawImage(img,x,y,x + W,y + H/4,
+			0,anim[frame]*H/4,W,anim[frame]*H/4 + H/4,null);
+	}
+	public void collisionV(Sprite sprite)	{
+			if(sprite.getBottomY()==y)
+                        {
+                            sprite.nonalive();
+                        }
+	}
+}
+class SegmentGO extends Segment {
+        public SegmentGO(int x, int y, String file)	{
+		super(x,y,file);
+	}
+    }
 //segment animowany
 class SegmentAnim extends Segment {
 	private int[] anim;	
@@ -69,11 +99,18 @@ class SegmentAnim extends Segment {
 		g.drawImage(img,x,y,x + W,y + H/4,
 			0,anim[frame]*H/4,W,anim[frame]*H/4 + H/4,null);
 	}
+        public void collisionV(Sprite sprite)	{
+			if(sprite.getX()==x && sprite.getY()==y)
+                        {
+                           System.out.println("String tutaj" );
+                        }
+        }
 }
 //************************* postac gracza
+
 class Sprite {
 	private static final Image img = new ImageIcon("Mario.png").getImage();
-		
+	public boolean alive =true;
 	private int[] anim = {0, 1, 2, 1};
 	private int frame = 2;		// klatka animacji
 	private boolean mirror = false; // postac patrzy w lewo/ prawo
@@ -154,8 +191,12 @@ class Sprite {
 		g.drawImage(img, x + (mirror?W:0),y,x + (mirror?0:W),y + H,
 			anim[frame]*W,0,anim[frame]*W + W,H,null);
 	}
+        public void nonalive()
+        {
+            this.alive=false;
+            System.out.println("Gameover!");
+        }
 }
-
 class SpriteController implements Runnable {
 	private final Sprite sprite;
 	private final ArrayList<Segment> plansza;
@@ -182,10 +223,8 @@ class SpriteController implements Runnable {
 
 class Game extends JPanel {
 	private final int TILESIZE = 32;
-	
 	private ArrayList<Segment> plansza;
 	private Sprite sprite;
-
 	private ArrayList<Segment> stworzPlansze(String plik, Budowniczy budowniczy) {
 		BufferedReader br=null;
 		try {
@@ -229,6 +268,20 @@ class Game extends JPanel {
 								x+=TILESIZE;
 							}
 							break;
+                                                case 'F':
+                                                        for(int i=0;i<liczba;++i)
+                                                        {
+                                                            budowniczy.dodajSegmentF(x, y);
+                                                            x+=TILESIZE;
+                                                        }
+                                                        break;
+                                                case 'P':
+                                                        for(int i=0;i<liczba;++i)
+                                                        {
+                                                            budowniczy.dodajSegmentCloud(x, y);
+                                                            x+=TILESIZE;
+                                                        }
+                                                        break;
 					}
 				}
 				y+=TILESIZE;
@@ -242,7 +295,7 @@ class Game extends JPanel {
 		}
 	}
 	public Game(String plik) {
-		setPreferredSize(new Dimension(2000, 2000));
+		setPreferredSize(new Dimension(1000, 800));
 		addKeyListener(new KeyAdapter() {
 			public void keyReleased(KeyEvent ev) {
 				switch(ev.getKeyCode())	{
@@ -277,6 +330,7 @@ class Game extends JPanel {
 			s.draw(g);
 		sprite.draw(g);
 	}
+
 }
 
 interface Budowniczy {
@@ -285,6 +339,9 @@ interface Budowniczy {
     void dodajSegmentB(int x, int y);
     void dodajSegmentC(int x, int y);
     void dodajSegmentG(int x, int y);
+    void dodajSegmentF(int x, int y);
+    void dodajSegmentGO(int x, int y);
+    void dodajSegmentCloud(int x, int y);
     ArrayList<Segment> pobierzPlansze();
 }
 
@@ -302,6 +359,10 @@ class BudowniczyZwykly implements Budowniczy {
         Segment s=new Segment(x, y, "block3.png");
         tablicaSegmentow.add(s);
     }
+    public void dodajSegmentCloud(int x, int y) {
+        Segment s=new Segment(x, y, "cloud.png");
+        tablicaSegmentow.add(s);
+    }
     public void dodajSegmentG(int x, int y) {
         Segment s=new SegmentAnim(x, y, "bonus.png", new int[] {0, 0, 0, 1, 1, 1, 2, 2, 3, 3, 2, 2, 1, 1, 1, 0, 0});
         tablicaSegmentow.add(s);
@@ -309,6 +370,14 @@ class BudowniczyZwykly implements Budowniczy {
     public ArrayList<Segment> pobierzPlansze() {
         return tablicaSegmentow;
     }
+     public void dodajSegmentF(int x, int y) {
+        Segment s=new SegmentBlockF(x, y, "fire.png", new int[] {0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3});
+        tablicaSegmentow.add(s);
+    }
+    public void dodajSegmentGO(int x, int y){
+        Segment s=new Segment(x, y, "GO.png");
+        tablicaSegmentow.add(s);
+    }; 
 }
 
 class BudowniczyDrugi implements Budowniczy {
@@ -325,13 +394,25 @@ class BudowniczyDrugi implements Budowniczy {
         Segment s=new SegmentBlock(x, y, "block3.png");
         tablicaSegmentow.add(s);
     }
+    public void dodajSegmentCloud(int x, int y) {
+        Segment s=new Segment(x, y, "cloud.png");
+        tablicaSegmentow.add(s);
+    }
     public void dodajSegmentG(int x, int y) {
         Segment s=new SegmentAnim(x, y, "bonus.png", new int[] {0, 0, 0, 1, 1, 1, 2, 2, 3, 3, 2, 2, 1, 1, 1, 0, 0});
+        tablicaSegmentow.add(s);
+    }
+    public void dodajSegmentF(int x, int y) {
+        Segment s=new SegmentBlockF(x, y, "fire.png", new int[] {0, 0, 0, 1, 1, 1, 2, 2, 3, 3, 2, 2, 1, 1, 1, 0, 0});
         tablicaSegmentow.add(s);
     }
     public ArrayList<Segment> pobierzPlansze() {
         return tablicaSegmentow;
     }
+    public void dodajSegmentGO(int x, int y){
+        Segment s=new Segment(x, y, "GO.png");
+        tablicaSegmentow.add(s);
+    }; 
 }
 
 public class Mario {
