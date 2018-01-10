@@ -13,6 +13,9 @@ import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.JComponent;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 //********************* element planszy
 //klasa bazowa dla segmentow
@@ -116,7 +119,7 @@ class SegmentEnemy extends Segment {
 	public void collisionV(Sprite sprite)	{
 			if(sprite.getBottomY()==y)
                         {
-                            sprite.nonalive();
+                            //sprite.nonalive();
                         }
 	}
         public void moveleft(int x){
@@ -151,8 +154,8 @@ class SegmentAnim extends Segment {
 			if(sprite.getX()==x || sprite.getY()==y || sprite.getBottomY()==y)
                         {
                             sprite.coin();
-                            x=1001;
-                            y=1001;
+                            x=1010;
+                            y=1010;
                         }
         }
 }
@@ -187,11 +190,11 @@ class Sprite {
 	public void stopMove() { moving=0; }
 
 	public void left() {
-		moving = -3;
+		moving = -5;
 		mirror = false;
 	}
 	public void right() {
-		moving = 3;
+		moving = 5;
 		mirror = true;
 	}
 	public void stop() {
@@ -244,8 +247,24 @@ class Sprite {
 	}
         public void nonalive()
         {
-            this.alive=false;
-            System.out.println("Gameover!");
+            try {
+                this.alive=false;
+                System.out.println("Gameover!");
+                JFrame f= new JFrame("Frame");
+                Szablonowa7 m = new Szablonowa7();
+                f.getContentPane().add(m);
+                f.setSize(500, 500);
+                f.setLocationRelativeTo(null);
+                f.setVisible(true);
+                f.pack();
+                new Thread(m).start();
+                TimeUnit.SECONDS.sleep(5);
+                f.setVisible(false);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Sprite.class.getName()).log(Level.SEVERE, null, ex);
+            }
+                
+            
         }
         public void coin()
         {
@@ -555,8 +574,12 @@ class Szablonowa7 extends JPanel implements Runnable {
  
     public Szablonowa7() {
         this.setPreferredSize(new Dimension(640, 480));
-        this.setBackground(null);
-        ar = new Mucha[30];
+        setLayout(new BorderLayout());
+	JLabel background=new JLabel(new ImageIcon("GO.png"));
+	this.add(background);
+	background.setLayout(new FlowLayout());
+
+        ar = new Mucha[200];
         for (int i = 0; i < ar.length; ++i) {
             if (random.nextBoolean()) {
                 ar[i] = new OrbitujacaMucha();
@@ -627,8 +650,13 @@ class OrbitujacaMucha extends Mucha {
 
 public class Mario extends JPanel{
 	public static void main(String[] args)	{
+            menu();
             
 
+}   
+        public static void menu()
+        {
+            
                 JFrame f = new JFrame("Menu Mario");
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 f.setSize(300, 300);   
@@ -670,7 +698,6 @@ public class Mario extends JPanel{
         d.setSize(500, 500);
         d.setLocationRelativeTo(f);
         d.setVisible(true);
-        
       }
     });
     
@@ -719,10 +746,9 @@ public class Mario extends JPanel{
     });
     
   
-}   
+        }
 
 
    }
         
-
 
