@@ -28,8 +28,6 @@ class Segment {
 	public void tick() {}
 	public void collisionV(Sprite sprite)	{}
 	public void collisionH(Sprite sprite)	{}
-        public void collisionVE(Enemy sprite)	{}
-	public void collisionHE(Enemy sprite)	{}
         public void move(){}
 }
 //segment bez mozliwosci przejscia
@@ -43,11 +41,7 @@ class SegmentBlock extends Segment {
 	public void collisionH(Sprite sprite)	{
 			sprite.stopMove();
 	}
-        public void collisionHE(Enemy sprite)	{
-            if(sprite.getX()==x)
-            sprite.right();
-            else sprite.left();
-        }
+        
 }
 //segment, na ktory mozna wskoczyc 
 class SegmentBlockV extends Segment {
@@ -129,78 +123,7 @@ class SegmentAnim extends Segment {
 }
 
 //************************* postac gracza
-class Enemy {
-	private static final Image img = new ImageIcon("Mario.png").getImage();
-	private int[] anim = {0, 1, 2, 1};
-	private int frame = 2;		// klatka animacji
-	private boolean mirror = false; // postac patrzy w lewo/ prawo
-	private int moving = 0;		// ruch w poziomie
-	private int jumping = 3; 	// ruch w pionie
-	private final ArrayList<Segment> plansza;
-        private int x=30 , y=30; 	// pozycja na ekranie
-	private final int W=32, H=32;// wysokosc i szerokosc sprite'a
-	public Enemy(ArrayList<Segment> pl) { plansza=pl; System.out.println("cos sie dzieje");}
 
-	public int getX() { return x; }
-	public int getY() { return y; }
-	public int getBottomY() { return y+H; }
-        public int getLeftX(){return x-W;}
-        public int getRightX(){return x+W;}
-        public void jump() {		// poruszanie postacia
-		if(jumping == 0) jumping = 10;
-	}
-	public boolean isJumping() { return jumping>0; }
-	public boolean jumpingDown() { return jumping<0; }
-	public void stopJump() { jumping=0; }
-	public void stopMove() { moving=0; }
-
-	public void left() {
-		moving = -3;
-		mirror = false;
-	}
-	public void right() {
-		moving = 3;
-		mirror = true;
-	}
-	public void stop() {
-		moving = 0;
-		frame = 2;
-	}
-		
-	private boolean canGo(int dx, int dy)	{
-		for(Segment s:plansza)
-			if(s.getBounds().intersects(x+dx, y+dy, W, H))	{
-				return false;
-			}
-		return true;
-	}
-	private void collide(int dx, int dy)	{
-		for(Segment s:plansza)
-			if(s.getBounds().intersects(x+dx, y+dy, W, H))	{
-				if(dx != 0)
-					s.collisionHE(this);
-				if(dy != 0)
-					s.collisionVE(this);
-			}
-	}
-	public void tick() {
-		if(moving != 0) {// animacja ruchu
-			frame++;
-			while (frame >= anim.length)
-				frame -= anim.length;
-		}
-		// przesuniecie w poziomie
-		for(int i = 0; i < Math.abs(moving); ++i) {
-			collide((int)Math.signum(moving), 0);
-			x += (int)Math.signum(moving);
-		}
-	}
-	public void draw(Graphics g) {
-		g.drawImage(img, x + (mirror?W:0),y,x + (mirror?0:W),y + H,
-			anim[frame]*W,0,anim[frame]*W + W,H,null);
-	}
-        
-}
 class Sprite {
 	private static final Image img = new ImageIcon("Mario.png").getImage();
 	public boolean alive =true;
@@ -299,19 +222,16 @@ class Sprite {
 }
 class SpriteController implements Runnable {
 	private final Sprite sprite;
-        private final Enemy enemy;
 	private final ArrayList<Segment> plansza;
 	private final JPanel panel;
-	public SpriteController(Sprite sp, ArrayList<Segment> pl, JPanel pan,Enemy en) {
+	public SpriteController(Sprite sp, ArrayList<Segment> pl, JPanel pan) {
 		sprite=sp;
 		plansza=pl;
 		panel=pan;
-                enemy=en;
 	}
 	public void run() {
 		while(true) {
 			sprite.tick();
-                        enemy.tick();
 			for(Segment s:plansza)
 				s.tick();
 			panel.repaint();
@@ -328,7 +248,6 @@ class Game extends JPanel {
 	private final int TILESIZE = 32;
 	private ArrayList<Segment> plansza;
 	private Sprite sprite;
-        private Enemy enemy;
 	private ArrayList<Segment> stworzPlansze(String plik, Budowniczy budowniczy) {
 		BufferedReader br=null;
 		try {
@@ -436,15 +355,13 @@ class Game extends JPanel {
                 Budowniczy budowniczy = new BudowniczyZwykly();
 		plansza=stworzPlansze(plik, budowniczy);
 		sprite=new Sprite(plansza);
-		enemy=new Enemy(plansza);
-		new Thread(new SpriteController(sprite, plansza, this,enemy)).start();
+		new Thread(new SpriteController(sprite, plansza, this)).start();
 	}
 	public void paint(Graphics g)	{
 		super.paint(g);
 		for(Segment s:plansza)
 			s.draw(g);
 		sprite.draw(g);
-                enemy.draw(g);
 	}
 
 }
@@ -492,6 +409,10 @@ class BudowniczyZwykly implements Budowniczy {
     }
     public void dodajSegmentEmpty(int x,int y){
         Segment s=new SegmentEmpty(x, y, "end.png");
+        tablicaSegmentow.add(s);
+    }
+    public void dodajSegmentE(int x, int y){
+        Segment s=new SegmentEmpty(x, y, "empty.png");
         tablicaSegmentow.add(s);
     }
 }
