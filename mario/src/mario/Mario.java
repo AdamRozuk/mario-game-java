@@ -9,13 +9,13 @@ import java.io.*;
 //********************* element planszy
 //klasa bazowa dla segmentow
 interface IPolaczenie {
-    char get(int indeks);
-    void set(int indeks, char c);
+    int get(int indeks);
+    void set(int indeks, int c);
     int length();
 }
 class Baza {
     
-    private char[] tab = new char[100];
+    private int[] tab = new int[100];
     private Baza(){}
     private static Baza baza;
     
@@ -23,7 +23,6 @@ class Baza {
         if(baza==null) baza=new Baza();
         return baza;
     }
-    /* ... */
     
     public static IPolaczenie getPolaczenie() {
         return Polaczenie.getInstance();
@@ -35,19 +34,18 @@ class Baza {
         private static int index=0;
         private Polaczenie(){}; 
         
-        /* ... */ 
         public static IPolaczenie getInstance() {
-            /* ... */
             index++;
             index%=3;
             return polaczenia[index];
         }
         
-        public char get(int indeks) {
-            return baza.tab[indeks];
+        public int get(int index)
+        {
+            return baza.tab[index];
         }
-        public void set(int indeks, char c) {
-            baza.tab[indeks] = c;
+        public void set(int indeks, int c) {
+            baza.tab[indeks]=c;
         }
         public int length() {
             return baza.tab.length;
@@ -269,21 +267,7 @@ class Sprite {
         }
         public void coin()
         {
-            p1.set(0,'a');
-                    if(p1==p4){
-            System.out.print("polaczenie p1 i p4 jest to samo\n");
-        }
-        if(p1==p3){
-            System.out.print("polaczenie p1 i p3 jest to samo\n");
-        }
-        
-        
-        System.out.print(p1.get(0));
-        System.out.print(p2.get(0));
-        System.out.print(p1.get(0));
-        System.out.print(p2.get(0));
-        System.out.print(p3.get(0));
-        System.out.print(p4.get(0));
+            p1.set(0,p1.get(0)+50);
         }
 }
 class SpriteController implements Runnable {
