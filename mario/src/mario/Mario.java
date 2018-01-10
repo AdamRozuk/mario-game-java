@@ -8,6 +8,50 @@ import java.io.*;
 
 //********************* element planszy
 //klasa bazowa dla segmentow
+interface IPolaczenie {
+    int get(int indeks);
+    void set(int indeks, int c);
+    int length();
+}
+class Baza {
+    
+    private int[] tab = new int[100];
+    private Baza(){}
+    private static Baza baza;
+    
+    private static Baza getBaza(){ 
+        if(baza==null) baza=new Baza();
+        return baza;
+    }
+    
+    public static IPolaczenie getPolaczenie() {
+        return Polaczenie.getInstance();
+    }
+    
+    private static class Polaczenie implements IPolaczenie {
+        private Baza baza= Baza.getBaza();
+        private static Polaczenie[] polaczenia ={ new Polaczenie(),new Polaczenie() ,new Polaczenie()};
+        private static int index=0;
+        private Polaczenie(){}; 
+        
+        public static IPolaczenie getInstance() {
+            index++;
+            index%=3;
+            return polaczenia[index];
+        }
+        
+        public int get(int index)
+        {
+            return baza.tab[index];
+        }
+        public void set(int indeks, int c) {
+            baza.tab[indeks]=c;
+        }
+        public int length() {
+            return baza.tab.length;
+        }
+    }
+}
 class Segment {	
 	protected Image img;
 	protected int x, y;
@@ -132,18 +176,26 @@ class Sprite {
 	private int moving = 0;		// ruch w poziomie
 	private int jumping = 0; 	// ruch w pionie
 	private final ArrayList<Segment> plansza;
-        public int points = 0;
 	private int x=150, y=100; 	// pozycja na ekranie
 	private final int W=16, H=27;// wysokosc i szerokosc sprite'a
-	public Sprite(ArrayList<Segment> pl) { plansza=pl; }
-
+        IPolaczenie p1 ;
+        IPolaczenie p2 ;
+        IPolaczenie p3 ;
+        IPolaczenie p4 ;
+	public Sprite(ArrayList<Segment> pl) { plansza=pl;
+        p1=Baza.getPolaczenie();
+        p2=Baza.getPolaczenie();
+        p3=Baza.getPolaczenie();
+        p4=Baza.getPolaczenie();
+        }
+        //private Punkty pkt;
+        private int points = 0;
 	public int getX() { return x; }
 	public int getY() { return y; }
 	public int getBottomY() { return y+H; }
         public int getLeftX(){return x-W;}
         public int getRightX(){return x+W;}
         
-
 	public void jump() {		// poruszanie postacia
 		if(jumping == 0) jumping = 10;
 	}
@@ -215,8 +267,7 @@ class Sprite {
         }
         public void coin()
         {
-            this.points+=50;
-            System.out.println("Coin added");
+            p1.set(0,p1.get(0)+50);
         }
 }
 class SpriteController implements Runnable {
@@ -453,6 +504,10 @@ class BudowniczyDrugi implements Budowniczy {
 
 public class Mario {
 	public static void main(String[] args)	{
+            
+
+        
+        System.out.print("\n");
 		JFrame frame = new JFrame("Mario");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().add(new JScrollPane(new Game("plansza01.txt")));
