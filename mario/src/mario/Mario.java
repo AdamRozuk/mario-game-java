@@ -81,6 +81,46 @@ class SegmentGO extends Segment {
 		super(x,y,file);
 	}
     }
+class SegmentEnemy extends Segment {
+	private int[] anim;	
+        private boolean mirror = false;
+	public SegmentEnemy(int x, int y, String file, int[] sequence) {
+		super(x,y,file);
+		anim = sequence; 
+	}
+        public int frame = 0;
+	public void tick()	{
+		frame++;
+		while (frame >= anim.length){
+			frame -= anim.length;
+                }
+            
+	}
+	public void move(int x)
+        {
+            moveright(x);
+            moveleft(x);
+        }	
+	public void draw(Graphics g) {
+		g.drawImage(img, x + (mirror?W:0),y,x + (mirror?0:W),y + H,
+			anim[frame]*W,0,anim[frame]*W + W,H,null);
+	}
+	public void collisionV(Sprite sprite)	{
+			if(sprite.getBottomY()==y)
+                        {
+                            sprite.nonalive();
+                        }
+	}
+        public void moveleft(int x){
+            x+=3;
+            mirror=false;
+        }
+        public void moveright(int x){
+            x-=3;
+            mirror=true;
+        }
+        
+}
 //segment animowany
 class SegmentAnim extends Segment {
 	private int[] anim;	
@@ -100,12 +140,15 @@ class SegmentAnim extends Segment {
 			0,anim[frame]*H/4,W,anim[frame]*H/4 + H/4,null);
 	}
         public void collisionV(Sprite sprite)	{
-			if(sprite.getX()==x && sprite.getY()==y)
+			if(sprite.getX()==x || sprite.getY()==y || sprite.getBottomY()==y)
                         {
-                           System.out.println("String tutaj" );
+                            sprite.coin();
+                            x=1001;
+                            y=1001;
                         }
         }
 }
+
 //************************* postac gracza
 
 class Sprite {
@@ -117,7 +160,7 @@ class Sprite {
 	private int moving = 0;		// ruch w poziomie
 	private int jumping = 0; 	// ruch w pionie
 	private final ArrayList<Segment> plansza;
-
+        public int points = 0;
 	private int x=150, y=100; 	// pozycja na ekranie
 	private final int W=16, H=27;// wysokosc i szerokosc sprite'a
 	
@@ -195,6 +238,11 @@ class Sprite {
         {
             this.alive=false;
             System.out.println("Gameover!");
+        }
+        public void coin()
+        {
+            this.points+=50;
+            System.out.println("Coin added");
         }
 }
 class SpriteController implements Runnable {
@@ -282,6 +330,14 @@ class Game extends JPanel {
                                                             x+=TILESIZE;
                                                         }
                                                         break;
+                                                case 'E':
+                                                        for(int i=0;i<liczba;++i)
+                                                        {
+                                                            budowniczy.dodajSegmentEnemy(x, y);
+                                                            x+=TILESIZE;
+                                                        }
+                                                        break;
+                                                        
 					}
 				}
 				y+=TILESIZE;
@@ -342,6 +398,7 @@ interface Budowniczy {
     void dodajSegmentF(int x, int y);
     void dodajSegmentGO(int x, int y);
     void dodajSegmentCloud(int x, int y);
+    void dodajSegmentEnemy(int x, int y);
     ArrayList<Segment> pobierzPlansze();
 }
 
@@ -377,7 +434,11 @@ class BudowniczyZwykly implements Budowniczy {
     public void dodajSegmentGO(int x, int y){
         Segment s=new Segment(x, y, "GO.png");
         tablicaSegmentow.add(s);
-    }; 
+    }
+    public void dodajSegmentEnemy(int x, int y) {
+        Segment s=new SegmentBlockF(x, y, "turtle.png", new int[] {0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3});
+        tablicaSegmentow.add(s);
+    }
 }
 
 class BudowniczyDrugi implements Budowniczy {
@@ -412,7 +473,11 @@ class BudowniczyDrugi implements Budowniczy {
     public void dodajSegmentGO(int x, int y){
         Segment s=new Segment(x, y, "GO.png");
         tablicaSegmentow.add(s);
-    }; 
+    }
+    public void dodajSegmentEnemy(int x, int y) {
+        Segment s=new SegmentBlockF(x, y, "turtle.png", new int[] {0, 1,2,3});
+        tablicaSegmentow.add(s);
+    }
 }
 
 public class Mario {
