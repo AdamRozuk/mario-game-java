@@ -8,6 +8,27 @@ import java.io.*;
 
 //********************* element planszy
 //klasa bazowa dla segmentow
+class Punkty
+{
+    private int[] points = new int[100];
+    private Punkty() {}
+    private static Punkty pkt = new Punkty();
+    public static Punkty getInstance()
+    {
+        if (pkt==null)
+            pkt = new Punkty();
+        return pkt;
+    }
+    public int get(int indeks) {
+        return pkt.points[indeks];
+    }
+    public void set(int indeks, int c) {
+        pkt.points[indeks] = c;
+    }
+    public int length() {
+        return pkt.points.length;
+    }
+}
 class Segment {	
 	protected Image img;
 	protected int x, y;
@@ -132,11 +153,11 @@ class Sprite {
 	private int moving = 0;		// ruch w poziomie
 	private int jumping = 0; 	// ruch w pionie
 	private final ArrayList<Segment> plansza;
-        public int points = 0;
 	private int x=150, y=100; 	// pozycja na ekranie
 	private final int W=16, H=27;// wysokosc i szerokosc sprite'a
 	public Sprite(ArrayList<Segment> pl) { plansza=pl; }
-
+        private Punkty pkt;
+        private int points = 0;
 	public int getX() { return x; }
 	public int getY() { return y; }
 	public int getBottomY() { return y+H; }
@@ -215,8 +236,10 @@ class Sprite {
         }
         public void coin()
         {
-            this.points+=50;
-            System.out.println("Coin added");
+            if(pkt==null){pkt.getInstance();}
+            points=pkt.get(0)+50;
+            pkt.set(0,points);
+            System.out.println(pkt.get(0));
         }
 }
 class SpriteController implements Runnable {
