@@ -28,7 +28,6 @@ class Segment {
 	public void tick() {}
 	public void collisionV(Sprite sprite)	{}
 	public void collisionH(Sprite sprite)	{}
-        public void move(){}
 }
 //segment bez mozliwosci przejscia
 class SegmentBlock extends Segment {	
@@ -265,8 +264,7 @@ class Game extends JPanel {
 					liczba=(cyfra1-'0')*10+(cyfra2-'0');
 					switch (znak) {
 						case 'X':
-							x+=liczba*TILESIZE;
-                                                        System.out.println(x+" "+y);
+							x+=liczba*TILESIZE;                                                        
 							break;
 						case 'A':
 							for (int i=0;i<liczba;++i) {
