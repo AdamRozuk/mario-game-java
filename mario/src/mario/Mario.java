@@ -746,16 +746,8 @@ public class Mario {
       {
         IPolaczenie p1 ;
         p1=Baza.getPolaczenie();
-        final JOptionPane optionPane = new JOptionPane(
-                p1.get(0)+"\n"+p1.get(1)+
-                 "\n"+p1.get(2)+"\n"+p1.get(3)+"\n"+p1.get(4)
-             );
-
-        JDialog d = new JDialog(f, "Full ScoreBoard", true);
-        d.setSize(500, 500);
-        d.setLocationRelativeTo(f);
-        d.setContentPane(optionPane);
-        d.setVisible(true);
+        JOptionPane.showMessageDialog(null,p1.get(0)+"\n"+p1.get(1)+
+                 "\n"+p1.get(2)+"\n"+p1.get(3)+"\n"+p1.get(4));
       }
     });
 
