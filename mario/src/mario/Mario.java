@@ -41,13 +41,15 @@ class Baza {
     
     private static class Polaczenie implements IPolaczenie {
         private Baza baza= Baza.getBaza();
-        private static Polaczenie[] polaczenia ={ new Polaczenie(),new Polaczenie() ,new Polaczenie()};
+        //private static Polaczenie[] polaczenia ={ new Polaczenie(),new Polaczenie() ,new Polaczenie()};
+        private static Polaczenie pol = new Polaczenie();
         private static int index=-1;
         private Polaczenie(){}
         
         public static IPolaczenie getInstance() {
             index++;
-            return polaczenia[index];
+            index=index%5;
+            return pol;
         }
         
         public int get(int index)
@@ -147,11 +149,11 @@ class SegmentE extends Segment {
 		super(x,y,file);
 	}
         public void collisionH(Sprite sprite)	{
-                      System.exit(0);      
+                      sprite.win();      
                         
 	}
         public void collisionV(Sprite sprite)	{
-                      System.exit(0);                      
+                      sprite.win();                      
         }
     }
 
@@ -285,7 +287,7 @@ class Sprite {
                 f.setVisible(true);
                 f.pack();
                 new Thread(m).start();
-                JOptionPane.showMessageDialog(null, "Twoj wynik to: "+p1.get(0));
+                JOptionPane.showMessageDialog(null, "Twoj wynik to: "+p1.get(p1.geti()));
                 TimeUnit.SECONDS.sleep(250);
                 f.setVisible(false);
                 
@@ -293,6 +295,10 @@ class Sprite {
                 Logger.getLogger(Sprite.class.getName()).log(Level.SEVERE, null, ex);
             }
             
+        }
+        public void win()
+        {
+            JOptionPane.showMessageDialog(null, "Twoj wynik to: "+p1.get(p1.geti()));
         }
         public void coin()
         {
