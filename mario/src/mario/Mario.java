@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 interface IPolaczenie {
     int get(int indeks);
     void set(int indeks, int c);
+    int geti();
     int length();
 }
 class Baza {
@@ -41,25 +42,30 @@ class Baza {
     
     private static class Polaczenie implements IPolaczenie {
         private Baza baza= Baza.getBaza();
-        private static Polaczenie[] polaczenia ={ new Polaczenie(),new Polaczenie() ,new Polaczenie()};
-        private static int index=0;
-        private Polaczenie(){}; 
+        //private static Polaczenie[] polaczenia ={ new Polaczenie(),new Polaczenie() ,new Polaczenie()};
+        private static Polaczenie pol = new Polaczenie();
+        private static int index=-1;
+        private Polaczenie(){}
         
         public static IPolaczenie getInstance() {
             index++;
-            index%=3;
-            return polaczenia[index];
+            index=index%5;
+            return pol;
         }
         
         public int get(int index)
         {
             return baza.tab[index];
         }
-        public void set(int indeks, int c) {
-            baza.tab[indeks]=c;
+        public void set(int index, int c) {
+            baza.tab[index]=c;
         }
         public int length() {
             return baza.tab.length;
+        }
+        public int geti()
+        {
+            return this.index;
         }
     }
 }
@@ -95,6 +101,7 @@ class SegmentBlock extends Segment {
 	public void collisionH(Sprite sprite)	{
 			sprite.stopMove();
 	}
+        
 }
 //segment, na ktory mozna wskoczyc 
 class SegmentBlockV extends Segment {
@@ -126,30 +133,29 @@ class SegmentBlockF extends Segment {
 	}
 	public void collisionV(Sprite sprite)	{
                             sprite.nonalive();
-                        
+
 	}
         public void collisionH(Sprite sprite)	{
 			
+            if(sprite.getY()!=y)
                             sprite.nonalive();
                         
 	}
+        public Rectangle getBounds()	{
+		return new Rectangle(x, y, W, H/4);
+	}        
 }
-class SegmentEmpty extends Segment {
-        public SegmentEmpty(int x, int y, String file)	{
+class SegmentE extends Segment {
+        public SegmentE(int x, int y, String file)	{
 		super(x,y,file);
 	}
         public void collisionH(Sprite sprite)	{
-                      System.exit(0);      
+                      sprite.win();      
                         
 	}
         public void collisionV(Sprite sprite)	{
-                      System.exit(0);                      
+                      sprite.win();                      
         }
-    }
-class SegmentGO extends Segment {
-        public SegmentGO(int x, int y, String file)	{
-		super(x,y,file);
-	}
     }
 
 //segment animowany
@@ -171,15 +177,13 @@ class SegmentAnim extends Segment {
 			0,anim[frame]*H/4,W,anim[frame]*H/4 + H/4,null);
 	}
         public void collisionV(Sprite sprite)	{
-			if(sprite.getX()==x || sprite.getY()==y || sprite.getBottomY()==y)
-                        {
+
                             sprite.coin();
                             x=1010;
                             y=1010;
-                        }
+
         }
 }
-
 //************************* postac gracza
 
 class Sprite {
@@ -191,26 +195,20 @@ class Sprite {
 	private int moving = 0;		// ruch w poziomie
 	private int jumping = 0; 	// ruch w pionie
 	private final ArrayList<Segment> plansza;
-        public int points = 0;
 	private int x=150, y=100; 	// pozycja na ekranie
 	private final int W=16, H=27;// wysokosc i szerokosc sprite'a
-	IPolaczenie p1 ;
-        IPolaczenie p2 ;
-        IPolaczenie p3 ;
-        IPolaczenie p4 ;
+        IPolaczenie p1 ;
 	public Sprite(ArrayList<Segment> pl) { plansza=pl;
         p1=Baza.getPolaczenie();
-        p2=Baza.getPolaczenie();
-        p3=Baza.getPolaczenie();
-        p4=Baza.getPolaczenie();
         }
-        
+        //private Punkty pkt;
         //private int points = 0;
 	public int getX() { return x; }
 	public int getY() { return y; }
 	public int getBottomY() { return y+H; }
         public int getLeftX(){return x-W;}
         public int getRightX(){return x+W;}
+        
 	public void jump() {		// poruszanie postacia
 		if(jumping == 0) jumping = 10;
 	}
@@ -279,15 +277,18 @@ class Sprite {
         {
             try {
                 this.alive=false;
+                String x = "GO.png";
+                String y = "win.jpg";
                 System.out.println("Gameover!");
                 JFrame f= new JFrame("Frame");
-                Szablonowa7 m = new Szablonowa7();
+                Szablonowa7 m = new Szablonowa7(x);
                 f.getContentPane().add(m);
                 f.setSize(500, 500);
                 f.setLocationRelativeTo(null);
                 f.setVisible(true);
                 f.pack();
                 new Thread(m).start();
+                JOptionPane.showMessageDialog(null, "Twoj wynik to: "+p1.get(p1.geti()));
                 TimeUnit.SECONDS.sleep(250);
                 f.setVisible(false);
             } catch (InterruptedException ex) {
@@ -298,8 +299,30 @@ class Sprite {
         }
         public void coin()
         {
-            p1.set(0,p1.get(0)+50);
+            p1.set(p1.geti(),p1.get(p1.geti())+50);
             System.out.println(p1.get(0));
+        }
+        public void win()
+        {
+            try {
+                String x = "GO.png";
+                String y = "win.jpg";
+                System.out.println("You win!");
+                JFrame f= new JFrame("Winner!");
+                Szablonowa7 m = new Szablonowa7(y);
+                f.getContentPane().add(m);
+                f.setSize(500, 500);
+                f.setLocationRelativeTo(null);
+                f.setVisible(true);
+                f.pack();
+                new Thread(m).start();
+                JOptionPane.showMessageDialog(null, "Twoj wynik to: "+p1.get(p1.geti()));
+                TimeUnit.SECONDS.sleep(250);
+                f.setVisible(false);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Sprite.class.getName()).log(Level.SEVERE, null, ex);
+            } 
+            
         }
 }
 class SpriteController implements Runnable {
@@ -388,12 +411,20 @@ class Game extends JPanel {
                                                         }
                                                         break;
                                                 case 'E':
-                                                        for(int i=0;i<liczba;++i)
+                                                        for(int i=0; i<liczba;++i)
                                                         {
-                                                            budowniczy.dodajSegmentEmpty(x, y);
+                                                            budowniczy.dodajSegmentE(x,y);
                                                             x+=TILESIZE;
                                                         }
                                                         break;
+                                                case 'S':
+                                                        for(int i=0; i<liczba;++i)
+                                                        {
+                                                            budowniczy.dodajSegmentEmpty(x,y);
+                                                            x+=TILESIZE;
+                                                        }
+                                                        
+                                                
                                                         
 					}
 				}
@@ -434,7 +465,6 @@ class Game extends JPanel {
                 Budowniczy budowniczy = new BudowniczyZwykly();
 		plansza=stworzPlansze(plik, budowniczy);
 		sprite=new Sprite(plansza);
-		
 		new Thread(new SpriteController(sprite, plansza, this)).start();
 	}
 	public void paint(Graphics g)	{
@@ -456,6 +486,7 @@ interface Budowniczy {
     void dodajSegmentGO(int x, int y);
     void dodajSegmentCloud(int x, int y);
     void dodajSegmentEmpty(int x,int y);
+    void dodajSegmentE(int x,int y);
     ArrayList<Segment> pobierzPlansze();
 }
 
@@ -492,18 +523,17 @@ class BudowniczyZwykly implements Budowniczy {
         Segment s=new Segment(x, y, "GO.png");
         tablicaSegmentow.add(s);
     }
-    public void dodajSegmentEmpty(int x,int y){
-        Segment s=new SegmentEmpty(x, y, "end.png");
+    public void dodajSegmentE(int x,int y){
+        Segment s=new SegmentE(x, y, "end.png");
         tablicaSegmentow.add(s);
     }
-        public void dodajSegmentE(int x, int y){
-        Segment s=new SegmentEmpty(x, y, "empty.png");
+    public void dodajSegmentEmpty(int x, int y){
+        Segment s=new SegmentBlock(x, y, "empty.png");
         tablicaSegmentow.add(s);
     }
 }
 
 class BudowniczyDrugi implements Budowniczy {
-    
     public void dodajSegmentA(int x, int y) {
         Segment s=new SegmentBlock(x, y, "block1.png");
         tablicaSegmentow.add(s);
@@ -528,8 +558,12 @@ class BudowniczyDrugi implements Budowniczy {
         Segment s=new SegmentBlockF(x, y, "fire.png", new int[] {0, 0, 0, 1, 1, 1, 2, 2, 3, 3, 2, 2, 1, 1, 1, 0, 0});
         tablicaSegmentow.add(s);
     } 
-    public void dodajSegmentEmpty(int x,int y){
-        Segment s=new SegmentEmpty(x, y, "end.png");
+    public void dodajSegmentE(int x,int y){
+        Segment s=new SegmentE(x, y, "end.png");
+        tablicaSegmentow.add(s);
+    }
+    public void dodajSegmentEmpty(int x, int y){
+        Segment s=new SegmentBlock(x, y, "empty.png");
         tablicaSegmentow.add(s);
     }
     public void dodajSegmentGO(int x, int y){
@@ -541,7 +575,6 @@ class BudowniczyDrugi implements Budowniczy {
     }
    
 }
-
 abstract class Mucha {
  
     private final double k = 0.01;
@@ -607,10 +640,10 @@ class Szablonowa7 extends JPanel implements Runnable {
     private Mucha[] ar;
     private Random random = new Random();
  
-    public Szablonowa7() {
-        this.setPreferredSize(new Dimension(640, 480));
+    public Szablonowa7(String nazwa) {
+        this.setPreferredSize(new Dimension(1150, 480));
         setLayout(new BorderLayout());
-	JLabel background=new JLabel(new ImageIcon("GO.png"));
+	JLabel background=new JLabel(new ImageIcon(nazwa));
 	this.add(background);
 	background.setLayout(new FlowLayout());
 
@@ -711,8 +744,7 @@ public class Mario {
                 b2.setBorder(paneEdge);
                 b3.setBorder(paneEdge);
                 
-        
-        
+
         b1.add(new JSeparator(JSeparator.VERTICAL),BorderLayout.LINE_START);
         b2.add(new JSeparator(JSeparator.VERTICAL),BorderLayout.LINE_START);
         b3.add(new JSeparator(JSeparator.VERTICAL),BorderLayout.LINE_START);
@@ -729,13 +761,12 @@ public class Mario {
       @Override
       public void actionPerformed(ActionEvent e)
       {
-        JDialog d = new JDialog(f, "Full ScoreBoard", true);
-        d.setSize(500, 500);
-        d.setLocationRelativeTo(f);
-        d.setVisible(true);
+        IPolaczenie p1 ;
+        p1=Baza.getPolaczenie();
+        JOptionPane.showMessageDialog(null,p1.get(0)+"\n"+p1.get(1)+
+                 "\n"+p1.get(2)+"\n"+p1.get(3)+"\n"+p1.get(4));
       }
     });
-    
         
     b2.addActionListener(new ActionListener()
     {
@@ -764,7 +795,7 @@ public class Mario {
                 frame.addWindowListener(new WindowAdapter(){
                 @Override
                 public void windowClosing(WindowEvent e){
-                    int i=JOptionPane.showConfirmDialog(null, "Na pewno chcesz zamknac aplikacje?"+"\n"+"Tak wylaczy aplickację"
+                    int i=JOptionPane.showConfirmDialog(null, "Na pewno chcesz zamknac aplikacje?"+"\n"+"Tak wylaczy aplickacje"
                             +"\n"+"Nie wylaczy to okno i przejdziesz do manu glownego");
                     if(i==0){ 
                         System.exit(0);
