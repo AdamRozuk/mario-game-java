@@ -1,5 +1,4 @@
 package mario;
-//localne repo
 
 import javax.swing.*;
 import java.awt.*;
@@ -8,7 +7,7 @@ import java.util.*;
 import java.io.*;
 import java.awt.*;
 import java.awt.event.*;
-import javax.swing.BorderFactory; 
+import javax.swing.BorderFactory;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 import javax.swing.border.EtchedBorder;
@@ -22,6 +21,7 @@ import java.util.logging.Logger;
 interface IPolaczenie {
     int get(int indeks);
     void set(int indeks, int c);
+    int geti();
     int length();
 }
 class Baza {
@@ -42,7 +42,7 @@ class Baza {
     private static class Polaczenie implements IPolaczenie {
         private Baza baza= Baza.getBaza();
         private static Polaczenie[] polaczenia ={ new Polaczenie(),new Polaczenie() ,new Polaczenie()};
-        private static int index=0;
+        private static int index=-1;
         private Polaczenie(){}; 
         
         public static IPolaczenie getInstance() {
@@ -60,6 +60,10 @@ class Baza {
         }
         public int length() {
             return baza.tab.length;
+        }
+        public int geti()
+        {
+            return this.index;
         }
     }
 }
@@ -95,6 +99,7 @@ class SegmentBlock extends Segment {
 	public void collisionH(Sprite sprite)	{
 			sprite.stopMove();
 	}
+        
 }
 //segment, na ktory mozna wskoczyc 
 class SegmentBlockV extends Segment {
@@ -126,16 +131,20 @@ class SegmentBlockF extends Segment {
 	}
 	public void collisionV(Sprite sprite)	{
                             sprite.nonalive();
-                        
+
 	}
         public void collisionH(Sprite sprite)	{
 			
+            if(sprite.getY()!=y)
                             sprite.nonalive();
                         
 	}
+        public Rectangle getBounds()	{
+		return new Rectangle(x, y, W, H/4);
+	}        
 }
-class SegmentEmpty extends Segment {
-        public SegmentEmpty(int x, int y, String file)	{
+class SegmentE extends Segment {
+        public SegmentE(int x, int y, String file)	{
 		super(x,y,file);
 	}
         public void collisionH(Sprite sprite)	{
@@ -145,11 +154,6 @@ class SegmentEmpty extends Segment {
         public void collisionV(Sprite sprite)	{
                       System.exit(0);                      
         }
-    }
-class SegmentGO extends Segment {
-        public SegmentGO(int x, int y, String file)	{
-		super(x,y,file);
-	}
     }
 
 //segment animowany
@@ -171,12 +175,11 @@ class SegmentAnim extends Segment {
 			0,anim[frame]*H/4,W,anim[frame]*H/4 + H/4,null);
 	}
         public void collisionV(Sprite sprite)	{
-			if(sprite.getX()==x || sprite.getY()==y || sprite.getBottomY()==y)
-                        {
+
                             sprite.coin();
                             x=1010;
                             y=1010;
-                        }
+
         }
 }
 
@@ -191,26 +194,20 @@ class Sprite {
 	private int moving = 0;		// ruch w poziomie
 	private int jumping = 0; 	// ruch w pionie
 	private final ArrayList<Segment> plansza;
-        public int points = 0;
 	private int x=150, y=100; 	// pozycja na ekranie
 	private final int W=16, H=27;// wysokosc i szerokosc sprite'a
-	IPolaczenie p1 ;
-        IPolaczenie p2 ;
-        IPolaczenie p3 ;
-        IPolaczenie p4 ;
+        IPolaczenie p1 ;
 	public Sprite(ArrayList<Segment> pl) { plansza=pl;
         p1=Baza.getPolaczenie();
-        p2=Baza.getPolaczenie();
-        p3=Baza.getPolaczenie();
-        p4=Baza.getPolaczenie();
         }
-        
-        //private int points = 0;
+        //private Punkty pkt;
+        private int points = 0;
 	public int getX() { return x; }
 	public int getY() { return y; }
 	public int getBottomY() { return y+H; }
         public int getLeftX(){return x-W;}
         public int getRightX(){return x+W;}
+        
 	public void jump() {		// poruszanie postacia
 		if(jumping == 0) jumping = 10;
 	}
@@ -293,12 +290,14 @@ class Sprite {
             } catch (InterruptedException ex) {
                 Logger.getLogger(Sprite.class.getName()).log(Level.SEVERE, null, ex);
             }
-                
-            
+
+
+
+            JOptionPane.showMessageDialog(null, "Twoj wynik to: "+p1.get(0)+".\nPozostałe wyniki:\n"+p1.get(1)+"\n"+p1.get(2)+"\n"+p1.get(3)+"\n"+p1.get(4));
         }
         public void coin()
         {
-            p1.set(0,p1.get(0)+50);
+            p1.set(p1.geti(),p1.get(0)+50);
             System.out.println(p1.get(0));
         }
 }
@@ -388,12 +387,20 @@ class Game extends JPanel {
                                                         }
                                                         break;
                                                 case 'E':
-                                                        for(int i=0;i<liczba;++i)
+                                                        for(int i=0; i<liczba;++i)
                                                         {
-                                                            budowniczy.dodajSegmentEmpty(x, y);
+                                                            budowniczy.dodajSegmentE(x,y);
                                                             x+=TILESIZE;
                                                         }
                                                         break;
+                                                case 'S':
+                                                        for(int i=0; i<liczba;++i)
+                                                        {
+                                                            budowniczy.dodajSegmentEmpty(x,y);
+                                                            x+=TILESIZE;
+                                                        }
+                                                        
+                                                
                                                         
 					}
 				}
@@ -434,7 +441,6 @@ class Game extends JPanel {
                 Budowniczy budowniczy = new BudowniczyZwykly();
 		plansza=stworzPlansze(plik, budowniczy);
 		sprite=new Sprite(plansza);
-		
 		new Thread(new SpriteController(sprite, plansza, this)).start();
 	}
 	public void paint(Graphics g)	{
@@ -456,6 +462,7 @@ interface Budowniczy {
     void dodajSegmentGO(int x, int y);
     void dodajSegmentCloud(int x, int y);
     void dodajSegmentEmpty(int x,int y);
+    void dodajSegmentE(int x,int y);
     ArrayList<Segment> pobierzPlansze();
 }
 
@@ -492,18 +499,17 @@ class BudowniczyZwykly implements Budowniczy {
         Segment s=new Segment(x, y, "GO.png");
         tablicaSegmentow.add(s);
     }
-    public void dodajSegmentEmpty(int x,int y){
-        Segment s=new SegmentEmpty(x, y, "end.png");
+    public void dodajSegmentE(int x,int y){
+        Segment s=new SegmentE(x, y, "end.png");
         tablicaSegmentow.add(s);
     }
-        public void dodajSegmentE(int x, int y){
-        Segment s=new SegmentEmpty(x, y, "empty.png");
+    public void dodajSegmentEmpty(int x, int y){
+        Segment s=new SegmentBlock(x, y, "empty.png");
         tablicaSegmentow.add(s);
     }
 }
 
 class BudowniczyDrugi implements Budowniczy {
-    
     public void dodajSegmentA(int x, int y) {
         Segment s=new SegmentBlock(x, y, "block1.png");
         tablicaSegmentow.add(s);
@@ -528,8 +534,12 @@ class BudowniczyDrugi implements Budowniczy {
         Segment s=new SegmentBlockF(x, y, "fire.png", new int[] {0, 0, 0, 1, 1, 1, 2, 2, 3, 3, 2, 2, 1, 1, 1, 0, 0});
         tablicaSegmentow.add(s);
     } 
-    public void dodajSegmentEmpty(int x,int y){
-        Segment s=new SegmentEmpty(x, y, "end.png");
+    public void dodajSegmentE(int x,int y){
+        Segment s=new SegmentE(x, y, "end.png");
+        tablicaSegmentow.add(s);
+    }
+    public void dodajSegmentEmpty(int x, int y){
+        Segment s=new SegmentBlock(x, y, "empty.png");
         tablicaSegmentow.add(s);
     }
     public void dodajSegmentGO(int x, int y){
@@ -543,22 +553,22 @@ class BudowniczyDrugi implements Budowniczy {
 }
 
 abstract class Mucha {
- 
+
     private final double k = 0.01;
     double x, y; // pozycja muchy
     double vx, vy; // predkosc muchy
- 
+
     public Mucha() {
         x = Math.random();
         y = Math.random();
         vx = k * (Math.random() - Math.random());
         vy = k * (Math.random() - Math.random());
     }
- 
+
     protected abstract void setColor(Graphics g);
-    
+
     protected abstract void fillOval(Graphics g, int x, int y, int width, int height);
- 
+
     public final void draw(Graphics g) {
         setColor(g);
         Rectangle rc = g.getClipBounds();
@@ -566,14 +576,14 @@ abstract class Mucha {
         int b = (int) (y * rc.getHeight());
         fillOval(g,a,b,5,5);
     }
- 
+
     protected abstract void move();
 }
- 
+
 class WektorMucha extends Mucha {
- 
+
     private Random random = new Random();
- 
+
     protected void move() {
         double lenght = Math.sqrt(vx*vx + vy*vy);
         double alfa = Math.acos(vx / lenght);
@@ -582,7 +592,7 @@ class WektorMucha extends Mucha {
         alfa = rangeMin + (rangeMax - rangeMin) * random.nextDouble();
         vx = lenght * Math.cos(alfa);
         vy = lenght * Math.sin(alfa);
-        
+
         x += vx;
         y += vy;
 		if(x<0) { x = -x; vx = -vx; }
@@ -590,7 +600,7 @@ class WektorMucha extends Mucha {
 		if(y<0) { y = -y; vy = -vy; }
 		if(y>1) { y = 2-y;vy = -vy; }
     }
- 
+
     @Override
     protected void setColor(Graphics g) {
         g.setColor(Color.MAGENTA);
@@ -603,10 +613,10 @@ class WektorMucha extends Mucha {
 }
 
 class Szablonowa7 extends JPanel implements Runnable {
- 
+
     private Mucha[] ar;
     private Random random = new Random();
- 
+
     public Szablonowa7() {
         this.setPreferredSize(new Dimension(640, 480));
         setLayout(new BorderLayout());
@@ -623,14 +633,14 @@ class Szablonowa7 extends JPanel implements Runnable {
             }
         }
     }
- 
+
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         for (int i = 0; i < ar.length; ++i) {
             ar[i].draw(g);
         }
     }
- 
+
     public void run() {
         while (true) {
             for (int i = 0; i < ar.length; ++i) {
@@ -645,12 +655,12 @@ class Szablonowa7 extends JPanel implements Runnable {
         }
     }
 }
- 
+
 class OrbitujacaMucha extends Mucha {
- 
+
     private Random random = new Random();
     double r ,Ox, Oy, alfa;
- 
+
     public OrbitujacaMucha() {
         super();
         r = random.nextDouble() / 10;
@@ -659,7 +669,7 @@ class OrbitujacaMucha extends Mucha {
         x = x + r;
         y = y + r;
     }
- 
+
     protected void move() {
         x = Ox + r * Math.sin(alfa);
         y = Oy + r * Math.cos(alfa);
@@ -669,7 +679,7 @@ class OrbitujacaMucha extends Mucha {
             alfa = 0;
         }
     }
- 
+
     @Override
     protected void setColor(Graphics g) {
         g.setColor(Color.CYAN);
@@ -686,44 +696,44 @@ class OrbitujacaMucha extends Mucha {
 public class Mario {
 	public static void main(String[] args)	{
             menu();
-            
 
-}   
+
+}
         public static void menu()
         {
-            
+
                 JFrame f = new JFrame("Menu Mario");
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                f.setSize(300, 300);   
+                f.setSize(300, 300);
                 f.setLocationRelativeTo(null);
                 f.setResizable(false);
 		f.setVisible(true);
-                 
-                
+
+
                 Container c = f.getContentPane();
                 f.getContentPane().setLayout(new BoxLayout(c, BoxLayout.Y_AXIS));
                 JButton b1 = new JButton("Play");
-                JButton b2 = new JButton("Quit"); 
+                JButton b2 = new JButton("Quit");
                 JButton b3 = new JButton("Scoreboard");
-                
+
                 Border paneEdge = BorderFactory.createMatteBorder(20,10,10,10,Color.LIGHT_GRAY);
                 b1.setBorder(paneEdge);
                 b2.setBorder(paneEdge);
                 b3.setBorder(paneEdge);
-                
-        
-        
+
+
+
         b1.add(new JSeparator(JSeparator.VERTICAL),BorderLayout.LINE_START);
         b2.add(new JSeparator(JSeparator.VERTICAL),BorderLayout.LINE_START);
         b3.add(new JSeparator(JSeparator.VERTICAL),BorderLayout.LINE_START);
-                
+
 
         f.add(b1);
         f.add(b3);
         f.add(b2);
 
-        
-        
+
+
     b3.addActionListener(new ActionListener()
     {
       @Override
@@ -735,8 +745,8 @@ public class Mario {
         d.setVisible(true);
       }
     });
-    
-        
+
+
     b2.addActionListener(new ActionListener()
     {
       @Override
@@ -745,7 +755,7 @@ public class Mario {
           System.exit(0);
       }
     });
-                
+
     b1.addActionListener(new ActionListener()
     {
       @Override
@@ -760,19 +770,19 @@ public class Mario {
                 frame.setResizable(true);
                 frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 		frame.setVisible(true);
-                
+
                 frame.addWindowListener(new WindowAdapter(){
                 @Override
                 public void windowClosing(WindowEvent e){
                     int i=JOptionPane.showConfirmDialog(null, "Na pewno chcesz zamknac aplikacje?"+"\n"+"Tak wylaczy aplickację"
                             +"\n"+"Nie wylaczy to okno i przejdziesz do manu glownego");
-                    if(i==0){ 
+                    if(i==0){
                         System.exit(0);
                     }
-                    if(i==1){ 
+                    if(i==1){
                         frame.dispose();
                     }
-                    if(i==2){  
+                    if(i==2){
                         frame.dispose();
                     }
                 }
@@ -780,12 +790,12 @@ public class Mario {
 
       }
     });
-    
-  
+
+
         }
 
 
    }
-        
+
 
 
