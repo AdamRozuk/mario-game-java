@@ -17,7 +17,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 //********************* element planszy
-//klasa bazowa dla segmentow
+
+//wzorzec Singleton
 interface IPolaczenie {
     int get(int indeks);
     void set(int indeks, int c);
@@ -68,6 +69,7 @@ class Baza {
         }
     }
 }
+//klasa bazowa dla segmentow
 class Segment {	
 	protected Image img;
 	protected int x, y;
@@ -80,14 +82,14 @@ class Segment {
 		H = img.getHeight(null);
 	}
 	public Rectangle getBounds()	{
-		return new Rectangle(x, y, W, H);
+		return new Rectangle(x, y, W, H);//wysnaczanie "hitboxu" segmentu
 	}
 	public void draw(Graphics g) {
-		g.drawImage(img, x, y, null);
+		g.drawImage(img, x, y, null);//rysowanie obiektu
 	}
 	public void tick() {}
-	public void collisionV(Sprite sprite)	{}
-	public void collisionH(Sprite sprite)	{}
+	public void collisionV(Sprite sprite)	{}//koliZJA wertykalna
+	public void collisionH(Sprite sprite)	{}//kolizja horyzontalna
 }
 //segment bez mozliwosci przejscia
 class SegmentBlock extends Segment {	
@@ -197,7 +199,7 @@ class Sprite {
 	private final ArrayList<Segment> plansza;
 	private int x=150, y=100; 	// pozycja na ekranie
 	private final int W=16, H=27;// wysokosc i szerokosc sprite'a
-        IPolaczenie p1 ;
+        IPolaczenie p1 ;//połącznie z bazą
 	public Sprite(ArrayList<Segment> pl) { plansza=pl;
         p1=Baza.getPolaczenie();
         }
@@ -244,7 +246,7 @@ class Sprite {
 					s.collisionH(this);
 				if(dy != 0)
 					s.collisionV(this);
-			}
+			}//kolizje
 	}
 	public void tick() {
 		if(moving != 0) {// animacja ruchu
@@ -275,7 +277,7 @@ class Sprite {
 	}
         public void nonalive()
         {
-            
+            //metoda wywoływana po śmierci bohatera
             try {
                 this.alive=false;
                 System.out.println("Gameover!");
@@ -298,14 +300,17 @@ class Sprite {
         }
         public void win()
         {
+            //wywoływana po przejściu całej planszy
             JOptionPane.showMessageDialog(null, "Twoj wynik to: "+p1.get(p1.geti()));
         }
         public void coin()
         {
+            //zbieranie monet i dodanie do pkt
             p1.set(p1.geti(),p1.get(p1.geti())+50);
             System.out.println(p1.get(0));
         }
 }
+//Obsługa wątków do mario
 class SpriteController implements Runnable {
 	private final Sprite sprite;
 	private final ArrayList<Segment> plansza;
@@ -329,7 +334,7 @@ class SpriteController implements Runnable {
 	}
 }
 	
-
+//rysowanie planszy
 class Game extends JPanel {
 	private final int TILESIZE = 32;
 	private ArrayList<Segment> plansza;
@@ -419,6 +424,7 @@ class Game extends JPanel {
 			return null;
 		}
 	}
+        //Logika gry
 	public Game(String plik) {
 		setPreferredSize(new Dimension(1000, 800));
 		addKeyListener(new KeyAdapter() {
@@ -456,7 +462,7 @@ class Game extends JPanel {
 	}
 
 }
-
+//Deklaracja bloczków użytych do budowania planszy
 interface Budowniczy {
     static ArrayList<Segment> tablicaSegmentow = new ArrayList();
     void dodajSegmentA(int x, int y);
@@ -744,6 +750,7 @@ public class Mario {
       @Override
       public void actionPerformed(ActionEvent e)
       {
+          //Scoreboard
         IPolaczenie p1 ;
         p1=Baza.getPolaczenie();
         JOptionPane.showMessageDialog(null,p1.get(0)+"\n"+p1.get(1)+
@@ -766,6 +773,7 @@ public class Mario {
       @Override
       public void actionPerformed(ActionEvent e)
       {
+                //Uruchomienie się planszy
            	JFrame frame = new JFrame("Mario");
 		//frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().add(new JScrollPane(new Game("plansza01.txt")));
