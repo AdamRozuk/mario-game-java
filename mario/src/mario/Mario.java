@@ -11,6 +11,7 @@ import java.io.*;
 interface IPolaczenie {
     int get(int indeks);
     void set(int indeks, int c);
+    int geti();
     int length();
 }
 class Baza {
@@ -31,12 +32,11 @@ class Baza {
     private static class Polaczenie implements IPolaczenie {
         private Baza baza= Baza.getBaza();
         private static Polaczenie[] polaczenia ={ new Polaczenie(),new Polaczenie() ,new Polaczenie()};
-        private static int index=0;
+        private static int index=-1;
         private Polaczenie(){}; 
         
         public static IPolaczenie getInstance() {
             index++;
-            index%=3;
             return polaczenia[index];
         }
         
@@ -49,6 +49,10 @@ class Baza {
         }
         public int length() {
             return baza.tab.length;
+        }
+        public int geti()
+        {
+            return this.index;
         }
     }
 }
@@ -118,14 +122,13 @@ class SegmentBlockF extends Segment {
 			
             if(sprite.getY()!=y)
                             sprite.nonalive();
-                        
 	}
         public Rectangle getBounds()	{
 		return new Rectangle(x, y, W, H/4);
 	}        
 }
-class SegmentEmpty extends Segment {
-        public SegmentEmpty(int x, int y, String file)	{
+class SegmentE extends Segment {
+        public SegmentE(int x, int y, String file)	{
 		super(x,y,file);
 	}
         public void collisionH(Sprite sprite)	{
@@ -156,12 +159,11 @@ class SegmentAnim extends Segment {
 			0,anim[frame]*H/4,W,anim[frame]*H/4 + H/4,null);
 	}
         public void collisionV(Sprite sprite)	{
-			if(sprite.getX()==x || sprite.getY()==y || sprite.getBottomY()==y)
-                        {
+			
                             sprite.coin();
                             x=1010;
                             y=1010;
-                        }
+                        
         }
 }
 
@@ -258,10 +260,11 @@ class Sprite {
         {
             this.alive=false;
             System.out.println("Gameover!");
+            JOptionPane.showMessageDialog(null, "Twoj wynik to: "+p1.get(0)+".\nPozostałe wyniki:\n"+p1.get(1)+"\n"+p1.get(2)+"\n"+p1.get(3)+"\n"+p1.get(4));
         }
         public void coin()
         {
-            p1.set(0,p1.get(0)+50);
+            p1.set(p1.geti(),p1.get(0)+50);
             System.out.println(p1.get(0));
         }
 }
@@ -353,14 +356,14 @@ class Game extends JPanel {
                                                 case 'E':
                                                         for(int i=0; i<liczba;++i)
                                                         {
-                                                            budowniczy.dodajSegmentEmpty(x,y);
+                                                            budowniczy.dodajSegmentE(x,y);
                                                             x+=TILESIZE;
                                                         }
                                                         break;
                                                 case 'S':
                                                         for(int i=0; i<liczba;++i)
                                                         {
-                                                            budowniczy.dodajSegmentS(x,y);
+                                                            budowniczy.dodajSegmentEmpty(x,y);
                                                             x+=TILESIZE;
                                                         }
                                                         
@@ -425,7 +428,7 @@ interface Budowniczy {
     void dodajSegmentF(int x, int y);
     void dodajSegmentCloud(int x, int y);
     void dodajSegmentEmpty(int x,int y);
-    void dodajSegmentS(int x, int y);
+    void dodajSegmentE(int x,int y);
     ArrayList<Segment> pobierzPlansze();
 }
 
@@ -458,21 +461,17 @@ class BudowniczyZwykly implements Budowniczy {
         Segment s=new SegmentBlockF(x, y, "fire.png", new int[] {0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3});
         tablicaSegmentow.add(s);
     }
-    public void dodajSegmentEmpty(int x,int y){
-        Segment s=new SegmentEmpty(x, y, "end.png");
+    public void dodajSegmentE(int x,int y){
+        Segment s=new SegmentE(x, y, "end.png");
         tablicaSegmentow.add(s);
     }
-    public void dodajSegmentS(int x, int y){
+    public void dodajSegmentEmpty(int x, int y){
         Segment s=new SegmentBlock(x, y, "empty.png");
         tablicaSegmentow.add(s);
     }
 }
 
 class BudowniczyDrugi implements Budowniczy {
-    public void dodajSegmentS(int x, int y){
-        Segment s=new SegmentBlock(x, y, "empty.png");
-        tablicaSegmentow.add(s);
-    }
     public void dodajSegmentA(int x, int y) {
         Segment s=new SegmentBlock(x, y, "block1.png");
         tablicaSegmentow.add(s);
@@ -497,8 +496,12 @@ class BudowniczyDrugi implements Budowniczy {
         Segment s=new SegmentBlockF(x, y, "fire.png", new int[] {0, 0, 0, 1, 1, 1, 2, 2, 3, 3, 2, 2, 1, 1, 1, 0, 0});
         tablicaSegmentow.add(s);
     } 
-    public void dodajSegmentEmpty(int x,int y){
-        Segment s=new SegmentEmpty(x, y, "end.png");
+    public void dodajSegmentE(int x,int y){
+        Segment s=new SegmentE(x, y, "end.png");
+        tablicaSegmentow.add(s);
+    }
+    public void dodajSegmentEmpty(int x, int y){
+        Segment s=new SegmentBlock(x, y, "empty.png");
         tablicaSegmentow.add(s);
     }
     public ArrayList<Segment> pobierzPlansze() {
