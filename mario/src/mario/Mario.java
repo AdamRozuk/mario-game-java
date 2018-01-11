@@ -43,11 +43,10 @@ class Baza {
         private Baza baza= Baza.getBaza();
         private static Polaczenie[] polaczenia ={ new Polaczenie(),new Polaczenie() ,new Polaczenie()};
         private static int index=-1;
-        private Polaczenie(){}; 
+        private Polaczenie(){}
         
         public static IPolaczenie getInstance() {
             index++;
-            index%=3;
             return polaczenia[index];
         }
         
@@ -55,8 +54,8 @@ class Baza {
         {
             return baza.tab[index];
         }
-        public void set(int indeks, int c) {
-            baza.tab[indeks]=c;
+        public void set(int index, int c) {
+            baza.tab[index]=c;
         }
         public int length() {
             return baza.tab.length;
@@ -274,6 +273,7 @@ class Sprite {
 	}
         public void nonalive()
         {
+            
             try {
                 this.alive=false;
                 System.out.println("Gameover!");
@@ -285,19 +285,18 @@ class Sprite {
                 f.setVisible(true);
                 f.pack();
                 new Thread(m).start();
+                JOptionPane.showMessageDialog(null, "Twoj wynik to: "+p1.get(0));
                 TimeUnit.SECONDS.sleep(250);
                 f.setVisible(false);
+                
             } catch (InterruptedException ex) {
                 Logger.getLogger(Sprite.class.getName()).log(Level.SEVERE, null, ex);
             }
-
-
-
-            JOptionPane.showMessageDialog(null, "Twoj wynik to: "+p1.get(0)+".\nPozostałe wyniki:\n"+p1.get(1)+"\n"+p1.get(2)+"\n"+p1.get(3)+"\n"+p1.get(4));
+            
         }
         public void coin()
         {
-            p1.set(p1.geti(),p1.get(0)+50);
+            p1.set(p1.geti(),p1.get(p1.geti())+50);
             System.out.println(p1.get(0));
         }
 }
@@ -739,9 +738,17 @@ public class Mario {
       @Override
       public void actionPerformed(ActionEvent e)
       {
+        IPolaczenie p1 ;
+        p1=Baza.getPolaczenie();
+        final JOptionPane optionPane = new JOptionPane(
+                p1.get(0)+"\n"+p1.get(1)+
+                 "\n"+p1.get(2)+"\n"+p1.get(3)+"\n"+p1.get(4)
+             );
+
         JDialog d = new JDialog(f, "Full ScoreBoard", true);
         d.setSize(500, 500);
         d.setLocationRelativeTo(f);
+        d.setContentPane(optionPane);
         d.setVisible(true);
       }
     });
