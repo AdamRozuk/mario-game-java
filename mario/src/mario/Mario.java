@@ -11,14 +11,45 @@ import java.awt.event.*;
 import javax.swing.BorderFactory; 
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
+
+import mario.Chessboard.RedoButton;
+import mario.Chessboard.UndoButton;
+
 import javax.swing.border.EtchedBorder;
 import javax.swing.JComponent;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+//--
+
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
+import java.awt.geom.AffineTransform;
+import java.util.HashMap;
+import java.util.Map.Entry;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JToolBar;
+
+import java.time.*;
+
+//--
+
 //********************* element planszy
 //klasa bazowa dla segmentow
+
 interface IPolaczenie {
     int get(int indeks);
     void set(int indeks, int c);
@@ -158,6 +189,20 @@ class SegmentE extends Segment {
         }
     }
 
+class SegmentZ extends Segment {
+    public SegmentZ(int x, int y, String file)	{
+	super(x,y,file);
+}
+    public void collisionH(Sprite sprite)	{
+                  sprite.zagadka();      
+                    
+}
+    public void collisionV(Sprite sprite)	{
+                  sprite.zagadka();                      
+    }
+}
+
+
 //segment animowany
 class SegmentAnim extends Segment {
 	private int[] anim;	
@@ -187,6 +232,7 @@ class SegmentAnim extends Segment {
 //************************* postac gracza
 
 class Sprite {
+	int a=0;
 	private static final Image img = new ImageIcon("Mario.png").getImage();
 	public boolean alive =true;
 	private int[] anim = {0, 1, 2, 1};
@@ -324,6 +370,38 @@ class Sprite {
             } 
             
         }
+        
+        public void zagadka()
+        {
+        	
+        	if(a==0) {
+        	try {
+        		a=1;
+             //this.alive=false;
+                System.out.println("zagadka!");
+                JFrame f= new JFrame("Frame");
+                Chessboard m = new Chessboard();
+                f.getContentPane().add(m);
+                f.setSize(900, 607);
+                f.setLocationRelativeTo(null);
+                f.setVisible(true);
+                f.pack();
+                //new Thread(m).start();
+                TimeUnit.SECONDS.sleep(20);
+                f.setVisible(false);
+                
+            } catch (InterruptedException ex) {
+                //Logger.getLogger(Sprite.class.getName()).log(Level.SEVERE, null, ex);
+            	//TimeUnit.SECONDS.sleep(0);
+            	
+                this.alive=true;
+                
+                
+                
+            }
+        	
+        	
+        }}
 }
 class SpriteController implements Runnable {
 	private final Sprite sprite;
@@ -350,9 +428,15 @@ class SpriteController implements Runnable {
 	
 
 class Game extends JPanel {
+	
 	private final int TILESIZE = 32;
 	private ArrayList<Segment> plansza;
 	private Sprite sprite;
+	private long time = System.currentTimeMillis();
+    private long time_end = time+120000;
+//	private long time = System.currentTimeMillis();
+//    private long time_end = time+30000;
+	
 	private ArrayList<Segment> stworzPlansze(String plik, Budowniczy budowniczy) {
 		BufferedReader br=null;
 		try {
@@ -423,6 +507,15 @@ class Game extends JPanel {
                                                             budowniczy.dodajSegmentEmpty(x,y);
                                                             x+=TILESIZE;
                                                         }
+                                                        break;
+                                                case 'Z':
+                                                	 for(int i=0; i<liczba;++i)
+                                                     {
+                                                         budowniczy.dodajSegmentZ(x,y);
+                                                         x+=TILESIZE;
+                                                     }
+                                                     break;
+                                                	
                                                         
                                                 
                                                         
@@ -449,6 +542,8 @@ class Game extends JPanel {
 						break;
 				}
 			}
+			
+			
 			public void keyPressed(KeyEvent ev) {
 				switch(ev.getKeyCode())	{
 					case KeyEvent.VK_LEFT:	sprite.left(); break;
@@ -469,12 +564,33 @@ class Game extends JPanel {
 	}
 	public void paint(Graphics g)	{
 		super.paint(g);
+		//{TT^TT}
+		time = System.currentTimeMillis();
+		long tmptime = (time_end-time);
+		String majtek="pozostalo ci:"+tmptime+" milisekundów";
+        g.drawString(majtek, 50, 50);
+        g.drawOval(50, 25, 200, 50); 
+        //<o.0>
+		
 		for(Segment s:plansza)
-			s.draw(g);
-		sprite.draw(g);
+		s.draw(g);
+		sprite.draw(g);	
+        //enemy.draw(g);
+       
+                
 	}
+	
+//	public void paint(Graphics g)	{
+//		super.paint(g);
+//		for(Segment s:plansza)
+//			s.draw(g);
+//		sprite.draw(g);
+//	}
+	
 
 }
+
+
 
 interface Budowniczy {
     static ArrayList<Segment> tablicaSegmentow = new ArrayList();
@@ -487,6 +603,7 @@ interface Budowniczy {
     void dodajSegmentCloud(int x, int y);
     void dodajSegmentEmpty(int x,int y);
     void dodajSegmentE(int x,int y);
+    void dodajSegmentZ(int x,int y);
     ArrayList<Segment> pobierzPlansze();
 }
 
@@ -525,6 +642,10 @@ class BudowniczyZwykly implements Budowniczy {
     }
     public void dodajSegmentE(int x,int y){
         Segment s=new SegmentE(x, y, "end.png");
+        tablicaSegmentow.add(s);
+    }
+    public void dodajSegmentZ(int x,int y){
+        Segment s=new SegmentZ(x, y, "znak_zapytania.png");
         tablicaSegmentow.add(s);
     }
     public void dodajSegmentEmpty(int x, int y){
@@ -568,6 +689,10 @@ class BudowniczyDrugi implements Budowniczy {
     }
     public void dodajSegmentGO(int x, int y){
         Segment s=new Segment(x, y, "GO.png");
+        tablicaSegmentow.add(s);
+    }
+    public void dodajSegmentZ(int x,int y){
+        Segment s=new SegmentZ(x, y, "znak_zapytania.png");
         tablicaSegmentow.add(s);
     }
     public ArrayList<Segment> pobierzPlansze() {
@@ -713,7 +838,185 @@ class OrbitujacaMucha extends Mucha {
         g.fillOval(x,y,width,height);
     }
 }
+//------------------------------------------------------------------------------------------------------
 
+
+class Chessboard extends JPanel {
+
+  private static final long serialVersionUID = 1L;
+  public static final int ZEROX = 23;
+  public static final int ZEROY = 7;
+  private HashMap <Point,IPiece> board = new HashMap<>();
+  private Image image;
+
+  public void drop(IPiece piece, Point point) {
+      repaint();
+      this.board.put(point, piece); }
+
+  public IPiece take(Point point) {
+      repaint();
+      return (IPiece) this.board.remove(point); }
+
+  private IPiece dragged = null;
+  private Point draggedPos = null;
+  AffineTransform draggedTransform = null;
+  private Point mouse = null;
+
+  public void paint(Graphics g) {
+      g.drawImage(this.image, 0, 0, null);
+
+      for (Entry<Point, IPiece> localEntry : this.board.entrySet()) {
+          IPiece piece = (IPiece) localEntry.getValue();
+          Point point = localEntry.getKey();
+          piece.draw((Graphics2D) g, point); }
+      if ((this.mouse != null) && (this.dragged != null))
+          this.dragged.draw((Graphics2D) g, draggedPos); }
+
+  public Chessboard() {
+      AffineTransform transform = new AffineTransform();
+      transform.translate(23.0D, 7.0D);
+      transform.scale(32.0D, 32.0D);
+      this.board.put(new Point(0, 2), new BetterDecorator(Piece.PieceFactory.CreatePiece(11), transform));
+      this.board.put(new Point(0, 6), new BetterDecorator(Piece.PieceFactory.CreatePiece(0), transform));
+      this.board.put(new Point(1, 4), new BetterDecorator(Piece.PieceFactory.CreatePiece(6), transform));
+      this.board.put(new Point(1, 5), new BetterDecorator(Piece.PieceFactory.CreatePiece(5), transform));
+      this.board.put(new Point(3, 7), new BetterDecorator(Piece.PieceFactory.CreatePiece(1), transform));
+      this.board.put(new Point(4, 3), new BetterDecorator(Piece.PieceFactory.CreatePiece(6), transform));
+      this.board.put(new Point(4, 4), new BetterDecorator(Piece.PieceFactory.CreatePiece(7), transform));
+      this.board.put(new Point(5, 4), new BetterDecorator(Piece.PieceFactory.CreatePiece(6), transform));
+      this.board.put(new Point(5, 6), new BetterDecorator(Piece.PieceFactory.CreatePiece(0), transform));
+      this.board.put(new Point(6, 5), new BetterDecorator(Piece.PieceFactory.CreatePiece(0), transform));
+      this.board.put(new Point(7, 4), new BetterDecorator(Piece.PieceFactory.CreatePiece(0), transform));
+
+      this.image = new ImageIcon("board3.png").getImage();
+      setPreferredSize(new Dimension(this.image.getWidth(null), this.image.getHeight(null)));
+
+      addMouseListener(new MouseAdapter() {
+          public void mousePressed(MouseEvent ev) {
+              Chessboard.this.draggedPos = new Point((ev.getX() - 23) / 32,
+                      (ev.getY() - 7) / 32);
+              Chessboard.this.dragged = Chessboard.this.take(draggedPos);
+              Chessboard.this.draggedTransform = new AffineTransform();
+              Chessboard.this.dragged = new BetterDecorator(Chessboard.this.dragged,
+                      Chessboard.this.draggedTransform);
+              Chessboard.this.mouse = ev.getPoint(); }
+
+          public void mouseReleased(MouseEvent ev) {
+              Chessboard.this.drop(Chessboard.this.dragged.getDecorated(),
+                      (new Point((ev.getX() - 23) / 32, (ev.getY() - 7) / 32)));
+              Chessboard.this.dragged = null;
+              Chessboard.this.undo.setEnabled(true);
+          }
+      });
+      addMouseMotionListener(new MouseMotionAdapter() {
+          public void mouseDragged(MouseEvent ev) {
+              Chessboard.this.draggedTransform.setToTranslation(
+                      ev.getX() - Chessboard.this.mouse.getX(),
+                      ev.getY() - Chessboard.this.mouse.getY());
+
+              Chessboard.this.repaint();
+          }
+      });
+  }
+
+  class UndoButton implements ActionListener  {
+      public void actionPerformed(ActionEvent ev)
+      {
+          System.out.println("UNDO");
+          redo.setEnabled(true);
+      }
+  }
+ 
+  class RedoButton implements ActionListener  {
+      public void actionPerformed(ActionEvent ev)     {
+          System.out.println("REDO");
+      }
+  }
+ 
+  private JButton undo, redo;
+
+  public static void main(String[] args) {
+      JFrame frame = new JFrame("Chess");
+      frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+      Chessboard board = new Chessboard();
+
+      JToolBar bar = new JToolBar();
+      board.undo = new JButton(new ImageIcon("undo.png"));
+      board.redo = new JButton(new ImageIcon("redo.png"));
+      board.undo.addActionListener(board.new UndoButton());
+      board.redo.addActionListener(board.new RedoButton());
+      board.undo.setEnabled(false);
+      board.redo.setEnabled(false);
+      bar.add(board.undo);
+      bar.add(board.redo);
+
+      frame.add(bar, BorderLayout.PAGE_START);
+      frame.add(board);
+
+      frame.pack();
+      frame.setVisible(true);
+  }
+
+}
+
+//-------------------------------------------------------------------------------------------------------------
+
+class BetterDecorator extends Decorator {   
+  private AffineTransform transform;
+  public BetterDecorator (IPiece piece, AffineTransform transform) {
+      super(piece);
+      this.transform = transform; }
+
+  public void draw(Graphics2D g, Point point) {
+      AffineTransform tmpTransform = g.getTransform();
+      g.transform(this.transform);
+      this.piece.draw(g, point);
+      g.setTransform(tmpTransform); }
+}
+
+
+class Decorator implements IPiece {
+  protected final IPiece piece;
+  protected Decorator(IPiece piece) {
+      this.piece = piece; }
+  public void draw(Graphics2D g, Point point) {
+      this.piece.draw(g, point); }
+  public IPiece getDecorated() {
+      return this.piece; }
+}
+
+
+interface IPiece {
+  public static final int TILESIZE = 32;
+  public abstract void draw(Graphics2D g, Point point);
+  public abstract IPiece getDecorated(); 
+}
+
+
+class Piece implements IPiece {
+  private static final Image image = new ImageIcon("pieces4.png").getImage();
+  private int idx;
+  private Piece(int idx) {
+      this.idx = idx; }
+  public void draw(Graphics2D g, Point point) {
+      g.drawImage(image, point.x,point.y,point.x+1,point.y+1,this.idx*TILESIZE,0,(this.idx+1)*TILESIZE,TILESIZE,null); }
+  public IPiece getDecorated() {
+      return null; }
+  
+  public static class PieceFactory {
+      private static final HashMap <Integer,Piece> pieceMap = new HashMap<>();
+      private PieceFactory() {}
+      public static Piece CreatePiece(int idx) {
+          if (!pieceMap.containsKey(idx))
+              pieceMap.put(idx, new Piece(idx));
+          return pieceMap.get(idx); }
+      }
+}
+
+
+
+//-----------------------------------------------------------------------------------------------------
 
 
 public class Mario {
@@ -754,6 +1057,7 @@ public class Mario {
         f.add(b3);
         f.add(b2);
 
+        f.show();
         
         
     b3.addActionListener(new ActionListener()
