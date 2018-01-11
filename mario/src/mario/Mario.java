@@ -45,9 +45,7 @@ import java.time.*;
 
 //--
 
-//********************* element planszy
-//klasa bazowa dla segmentow
-
+//Zaimplementowanie singletona z bazą punktów
 interface IPolaczenie {
     int get(int indeks);
     void set(int indeks, int c);
@@ -98,6 +96,8 @@ class Baza {
         }
     }
 }
+//********************* element planszy
+//klasa bazowa dla segmentow
 class Segment {	
 	protected Image img;
 	protected int x, y;
@@ -142,6 +142,7 @@ class SegmentBlockV extends Segment {
 				sprite.stopJump();
 	}
 }
+//segment z ogniem
 class SegmentBlockF extends Segment {
 	private int[] anim;	
         
@@ -174,6 +175,7 @@ class SegmentBlockF extends Segment {
 		return new Rectangle(x, y, W, H/4);
 	}        
 }
+//segment wyjścia
 class SegmentE extends Segment {
         public SegmentE(int x, int y, String file)	{
 		super(x,y,file);
@@ -186,7 +188,7 @@ class SegmentE extends Segment {
                       sprite.win();                      
         }
     }
-
+//segment zagadki
 class SegmentZ extends Segment {
     public SegmentZ(int x, int y, String file)	{
 	super(x,y,file);
@@ -201,7 +203,7 @@ class SegmentZ extends Segment {
 }
 
 
-//segment animowany
+//segment monety
 class SegmentAnim extends Segment {
 	private int[] anim;	
 	public SegmentAnim(int x, int y, String file, int[] sequence) {
@@ -317,6 +319,7 @@ class Sprite {
 		g.drawImage(img, x + (mirror?W:0),y,x + (mirror?0:W),y + H,
 			anim[frame]*W,0,anim[frame]*W + W,H,null);
 	}
+        //wywoływane przy śmierci
         public void nonalive()
         {
             try {
@@ -341,11 +344,13 @@ class Sprite {
                 
             
         }
+        //zbieranie monety
         public void coin()
         {
             p1.set(p1.geti(),p1.get(p1.geti())+50);
             System.out.println(p1.get(0));
         }
+        //wygrana
         public void win()
         {
             try {
@@ -368,7 +373,7 @@ class Sprite {
             } 
             
         }
-        
+        //wywoływanie się zagadki
         public void zagadka()
         {
         	
@@ -424,7 +429,7 @@ class SpriteController implements Runnable {
 	}
 }
 	
-
+//budowanie planszy
 class Game extends JPanel {
 	
 	private final int TILESIZE = 32;
@@ -529,6 +534,7 @@ class Game extends JPanel {
 			return null;
 		}
 	}
+        //logika gry
 	public Game(String plik) {
 		setPreferredSize(new Dimension(1000, 800));
 		addKeyListener(new KeyAdapter() {
@@ -565,7 +571,7 @@ class Game extends JPanel {
 		//{TT^TT}
 		time = System.currentTimeMillis();
 		long tmptime = (time_end-time);
-		String majtek="pozostalo ci:"+tmptime+" milisekund�w";
+		String majtek="pozostalo ci:"+tmptime+" milisekund�w";
         g.drawString(majtek, 50, 50);
         g.drawOval(50, 25, 200, 50); 
         //<o.0>
@@ -589,7 +595,7 @@ class Game extends JPanel {
 }
 
 
-
+//budowniczy
 interface Budowniczy {
     static ArrayList<Segment> tablicaSegmentow = new ArrayList();
     void dodajSegmentA(int x, int y);
