@@ -5,6 +5,16 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 import java.io.*;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.BorderFactory;
+import javax.swing.border.Border;
+import javax.swing.border.TitledBorder;
+import javax.swing.border.EtchedBorder;
+import javax.swing.JComponent;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 //********************* element planszy
 //klasa bazowa dla segmentow
@@ -37,6 +47,7 @@ class Baza {
         
         public static IPolaczenie getInstance() {
             index++;
+            index%=3;
             return polaczenia[index];
         }
         
@@ -118,10 +129,15 @@ class SegmentBlockF extends Segment {
 		g.drawImage(img,x,y,x + W,y + H/4,
 			0,anim[frame]*H/4,W,anim[frame]*H/4 + H/4,null);
 	}
+	public void collisionV(Sprite sprite)	{
+                            sprite.nonalive();
+
+	}
         public void collisionH(Sprite sprite)	{
 			
             if(sprite.getY()!=y)
                             sprite.nonalive();
+                        
 	}
         public Rectangle getBounds()	{
 		return new Rectangle(x, y, W, H/4);
@@ -159,11 +175,11 @@ class SegmentAnim extends Segment {
 			0,anim[frame]*H/4,W,anim[frame]*H/4 + H/4,null);
 	}
         public void collisionV(Sprite sprite)	{
-			
+
                             sprite.coin();
                             x=1010;
                             y=1010;
-                        
+
         }
 }
 
@@ -201,11 +217,11 @@ class Sprite {
 	public void stopMove() { moving=0; }
 
 	public void left() {
-		moving = -3;
+		moving = -5;
 		mirror = false;
 	}
 	public void right() {
-		moving = 3;
+		moving = 5;
 		mirror = true;
 	}
 	public void stop() {
@@ -258,8 +274,25 @@ class Sprite {
 	}
         public void nonalive()
         {
-            this.alive=false;
-            System.out.println("Gameover!");
+            try {
+                this.alive=false;
+                System.out.println("Gameover!");
+                JFrame f= new JFrame("Frame");
+                Szablonowa7 m = new Szablonowa7();
+                f.getContentPane().add(m);
+                f.setSize(500, 500);
+                f.setLocationRelativeTo(null);
+                f.setVisible(true);
+                f.pack();
+                new Thread(m).start();
+                TimeUnit.SECONDS.sleep(250);
+                f.setVisible(false);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Sprite.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+
+
             JOptionPane.showMessageDialog(null, "Twoj wynik to: "+p1.get(0)+".\nPozostałe wyniki:\n"+p1.get(1)+"\n"+p1.get(2)+"\n"+p1.get(3)+"\n"+p1.get(4));
         }
         public void coin()
@@ -313,7 +346,7 @@ class Game extends JPanel {
 					liczba=(cyfra1-'0')*10+(cyfra2-'0');
 					switch (znak) {
 						case 'X':
-							x+=liczba*TILESIZE;                                                        
+							x+=liczba*TILESIZE;
 							break;
 						case 'A':
 							for (int i=0;i<liczba;++i) {
@@ -426,6 +459,7 @@ interface Budowniczy {
     void dodajSegmentC(int x, int y);
     void dodajSegmentG(int x, int y);
     void dodajSegmentF(int x, int y);
+    void dodajSegmentGO(int x, int y);
     void dodajSegmentCloud(int x, int y);
     void dodajSegmentEmpty(int x,int y);
     void dodajSegmentE(int x,int y);
@@ -459,6 +493,10 @@ class BudowniczyZwykly implements Budowniczy {
     }
      public void dodajSegmentF(int x, int y) {
         Segment s=new SegmentBlockF(x, y, "fire.png", new int[] {0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3});
+        tablicaSegmentow.add(s);
+    }
+    public void dodajSegmentGO(int x, int y){
+        Segment s=new Segment(x, y, "GO.png");
         tablicaSegmentow.add(s);
     }
     public void dodajSegmentE(int x,int y){
@@ -504,23 +542,260 @@ class BudowniczyDrugi implements Budowniczy {
         Segment s=new SegmentBlock(x, y, "empty.png");
         tablicaSegmentow.add(s);
     }
+    public void dodajSegmentGO(int x, int y){
+        Segment s=new Segment(x, y, "GO.png");
+        tablicaSegmentow.add(s);
+    }
     public ArrayList<Segment> pobierzPlansze() {
         return tablicaSegmentow;
     }
    
 }
 
+abstract class Mucha {
+
+    private final double k = 0.01;
+    double x, y; // pozycja muchy
+    double vx, vy; // predkosc muchy
+
+    public Mucha() {
+        x = Math.random();
+        y = Math.random();
+        vx = k * (Math.random() - Math.random());
+        vy = k * (Math.random() - Math.random());
+    }
+
+    protected abstract void setColor(Graphics g);
+
+    protected abstract void fillOval(Graphics g, int x, int y, int width, int height);
+
+    public final void draw(Graphics g) {
+        setColor(g);
+        Rectangle rc = g.getClipBounds();
+        int a = (int) (x * rc.getWidth());
+        int b = (int) (y * rc.getHeight());
+        fillOval(g,a,b,5,5);
+    }
+
+    protected abstract void move();
+}
+
+class WektorMucha extends Mucha {
+
+    private Random random = new Random();
+
+    protected void move() {
+        double lenght = Math.sqrt(vx*vx + vy*vy);
+        double alfa = Math.acos(vx / lenght);
+        double rangeMax = 2 * Math.PI;
+        double rangeMin = 0;
+        alfa = rangeMin + (rangeMax - rangeMin) * random.nextDouble();
+        vx = lenght * Math.cos(alfa);
+        vy = lenght * Math.sin(alfa);
+
+        x += vx;
+        y += vy;
+		if(x<0) { x = -x; vx = -vx; }
+		if(x>1) { x = 2-x;vx = -vx; }
+		if(y<0) { y = -y; vy = -vy; }
+		if(y>1) { y = 2-y;vy = -vy; }
+    }
+
+    @Override
+    protected void setColor(Graphics g) {
+        g.setColor(Color.MAGENTA);
+    }
+
+    @Override
+    protected void fillOval(Graphics g, int x, int y, int width, int height) {
+        g.fillOval(x,y,width,height);
+    }
+}
+
+class Szablonowa7 extends JPanel implements Runnable {
+
+    private Mucha[] ar;
+    private Random random = new Random();
+
+    public Szablonowa7() {
+        this.setPreferredSize(new Dimension(640, 480));
+        setLayout(new BorderLayout());
+	JLabel background=new JLabel(new ImageIcon("GO.png"));
+	this.add(background);
+	background.setLayout(new FlowLayout());
+
+        ar = new Mucha[300];
+        for (int i = 0; i < ar.length; ++i) {
+            if (random.nextBoolean()) {
+                ar[i] = new OrbitujacaMucha();
+            } else {
+                ar[i] = new WektorMucha();
+            }
+        }
+    }
+
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        for (int i = 0; i < ar.length; ++i) {
+            ar[i].draw(g);
+        }
+    }
+
+    public void run() {
+        while (true) {
+            for (int i = 0; i < ar.length; ++i) {
+                ar[i].move();
+            }
+            repaint();
+            try {
+                Thread.currentThread().sleep(20);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+
+class OrbitujacaMucha extends Mucha {
+
+    private Random random = new Random();
+    double r ,Ox, Oy, alfa;
+
+    public OrbitujacaMucha() {
+        super();
+        r = random.nextDouble() / 10;
+        Ox = x;
+        Oy = y;
+        x = x + r;
+        y = y + r;
+    }
+
+    protected void move() {
+        x = Ox + r * Math.sin(alfa);
+        y = Oy + r * Math.cos(alfa);
+        alfa = alfa + 0.1;
+        if (alfa >= 2 * Math.PI)
+        {
+            alfa = 0;
+        }
+    }
+
+    @Override
+    protected void setColor(Graphics g) {
+        g.setColor(Color.CYAN);
+    }
+
+    @Override
+    protected void fillOval(Graphics g, int x, int y, int width, int height) {
+        g.fillOval(x,y,width,height);
+    }
+}
+
+
+
 public class Mario {
 	public static void main(String[] args)	{
-            
+            menu();
 
-        
-        System.out.print("\n");
-		JFrame frame = new JFrame("Mario");
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.getContentPane().add(new JScrollPane(new Game("plansza01.txt")));
-		frame.pack();
-		frame.setVisible(true);
-	}
+
 }
+        public static void menu()
+        {
+
+                JFrame f = new JFrame("Menu Mario");
+		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                f.setSize(300, 300);
+                f.setLocationRelativeTo(null);
+                f.setResizable(false);
+		f.setVisible(true);
+
+
+                Container c = f.getContentPane();
+                f.getContentPane().setLayout(new BoxLayout(c, BoxLayout.Y_AXIS));
+                JButton b1 = new JButton("Play");
+                JButton b2 = new JButton("Quit");
+                JButton b3 = new JButton("Scoreboard");
+
+                Border paneEdge = BorderFactory.createMatteBorder(20,10,10,10,Color.LIGHT_GRAY);
+                b1.setBorder(paneEdge);
+                b2.setBorder(paneEdge);
+                b3.setBorder(paneEdge);
+
+
+
+        b1.add(new JSeparator(JSeparator.VERTICAL),BorderLayout.LINE_START);
+        b2.add(new JSeparator(JSeparator.VERTICAL),BorderLayout.LINE_START);
+        b3.add(new JSeparator(JSeparator.VERTICAL),BorderLayout.LINE_START);
+
+
+        f.add(b1);
+        f.add(b3);
+        f.add(b2);
+
+
+
+    b3.addActionListener(new ActionListener()
+    {
+      @Override
+      public void actionPerformed(ActionEvent e)
+      {
+        JDialog d = new JDialog(f, "Full ScoreBoard", true);
+        d.setSize(500, 500);
+        d.setLocationRelativeTo(f);
+        d.setVisible(true);
+      }
+    });
+
+
+    b2.addActionListener(new ActionListener()
+    {
+      @Override
+      public void actionPerformed(ActionEvent e)
+      {
+          System.exit(0);
+      }
+    });
+
+    b1.addActionListener(new ActionListener()
+    {
+      @Override
+      public void actionPerformed(ActionEvent e)
+      {
+           	JFrame frame = new JFrame("Mario");
+		//frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.getContentPane().add(new JScrollPane(new Game("plansza01.txt")));
+                //frame.getContentPane().add(new JScrollPane(new Szablonowa7()));
+                frame.setBackground(null);
+		frame.pack();
+                frame.setResizable(true);
+                frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+		frame.setVisible(true);
+
+                frame.addWindowListener(new WindowAdapter(){
+                @Override
+                public void windowClosing(WindowEvent e){
+                    int i=JOptionPane.showConfirmDialog(null, "Na pewno chcesz zamknac aplikacje?"+"\n"+"Tak wylaczy aplickację"
+                            +"\n"+"Nie wylaczy to okno i przejdziesz do manu glownego");
+                    if(i==0){
+                        System.exit(0);
+                    }
+                    if(i==1){
+                        frame.dispose();
+                    }
+                    if(i==2){
+                        frame.dispose();
+                    }
+                }
+            });
+
+      }
+    });
+
+
+        }
+
+
+   }
+
+
 
