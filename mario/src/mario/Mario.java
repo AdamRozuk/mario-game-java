@@ -12,8 +12,6 @@ import javax.swing.BorderFactory;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 
-import mario.Chessboard.RedoButton;
-import mario.Chessboard.UndoButton;
 
 import javax.swing.border.EtchedBorder;
 import javax.swing.JComponent;
@@ -387,7 +385,7 @@ class Sprite {
                 f.setVisible(true);
                 f.pack();
                 //new Thread(m).start();
-                TimeUnit.SECONDS.sleep(20);
+                TimeUnit.SECONDS.sleep(9);
                 f.setVisible(false);
                 
             } catch (InterruptedException ex) {
@@ -905,7 +903,7 @@ class Chessboard extends JPanel {
               Chessboard.this.drop(Chessboard.this.dragged.getDecorated(),
                       (new Point((ev.getX() - 23) / 32, (ev.getY() - 7) / 32)));
               Chessboard.this.dragged = null;
-              Chessboard.this.undo.setEnabled(true);
+
           }
       });
       addMouseMotionListener(new MouseMotionAdapter() {
@@ -919,21 +917,7 @@ class Chessboard extends JPanel {
       });
   }
 
-  class UndoButton implements ActionListener  {
-      public void actionPerformed(ActionEvent ev)
-      {
-          System.out.println("UNDO");
-          redo.setEnabled(true);
-      }
-  }
  
-  class RedoButton implements ActionListener  {
-      public void actionPerformed(ActionEvent ev)     {
-          System.out.println("REDO");
-      }
-  }
- 
-  private JButton undo, redo;
 
   public static void main(String[] args) {
       JFrame frame = new JFrame("Chess");
@@ -942,14 +926,7 @@ class Chessboard extends JPanel {
       Chessboard board = new Chessboard();
 
       JToolBar bar = new JToolBar();
-      board.undo = new JButton(new ImageIcon("undo.png"));
-      board.redo = new JButton(new ImageIcon("redo.png"));
-      board.undo.addActionListener(board.new UndoButton());
-      board.redo.addActionListener(board.new RedoButton());
-      board.undo.setEnabled(false);
-      board.redo.setEnabled(false);
-      bar.add(board.undo);
-      bar.add(board.redo);
+
 
       frame.add(bar, BorderLayout.PAGE_START);
       frame.add(board);
